@@ -21,7 +21,7 @@ async function getGroup(pageNum) {
 };
 
 async function getGroups() {
-  console.debug("#### groupsapi : Entering getGroups");
+  console.log("#### groupsapi : Entering getGroups");
   let groups = [];
 
   let i = 1;
@@ -56,9 +56,9 @@ async function getGroupByName(groupName) {
 
 async function addUsersToAGroup(groupId, userIds) {
 
-  console.debug("###### entering addUsersToAGroup => "+groupId );
+  console.debug("#### Entering addUsersToAGroup => "+groupId );
 
-  console.debug("###### usersids.lentgh => "+userIds.length )
+  console.debug("##### addUsersToAGroup : usersids.length => "+userIds.length )
 
   let apiInstance = new platformClient.GroupsApi();
 
@@ -73,8 +73,9 @@ async function addUsersToAGroup(groupId, userIds) {
       },
       { delay: 200, factor: 2, maxAttempts: 5 }
     );
+    console.debug("#### Leaving addUsersToAGroup ");
   } catch (e) {
-    console.error(`Error occurred while trying create group for user.`, groupId, userIds, e);
+    console.error(`###### addUsersToAGroup ERROR occurred while trying create group for user.`, groupId, userIds, e);
   }
 };
 

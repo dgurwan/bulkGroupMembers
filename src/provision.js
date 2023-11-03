@@ -19,23 +19,27 @@ function wait(ms) {
  * @param {*} groupName 
  */
 async function assignUsersToGroups(users, groupName) {
-  console.debug("#### START assignUsersToGroups : groupName => " + groupName);
+  console.debug("#### Entering assignUsersToGroups : groupName => " + groupName); 
+  console.debug("##### assignUsersToGroups : users.length => " + users.length);
+  console.debug("##### assignUsersToGroups : groupName => " + groupName);
 
   const usersArray = await users;
   let arrayOfArrays = [];
 
   // Endpoint autohrize only 50 membersId, so we need to split the usersArray
-  console.debug("#### START assignUsersToGroups : split");
+  console.debug("##### assignUsersToGroups : split");
   if (usersArray.length > 50) {
     var size = 50;
     for (var i = 0; i < usersArray.length; i += size) {
       arrayOfArrays.push(usersArray.slice(i, i + size));
     }
-    console.log(arrayOfArrays);
+    console.debug("##### assignUsersToGroups : arrayOfArrays length => " +arrayOfArrays.length);
   }
-  console.debug("#### END assignUsersToGroups : split");
+  else {
+    arrayOfArrays.push(usersArray);
+  }
 
-  //console.debug("### assignUsersToGroups : usersArray " + JSON.stringify(usersArray));
+  console.debug("##### assignUsersToGroups : usersArray " + JSON.stringify(usersArray));
 
   //Search GroupId by group name
   const group = await (groupsApiProxy.getGroupByName(groupName));
@@ -44,15 +48,15 @@ async function assignUsersToGroups(users, groupName) {
 
   let userInError = [];
 
-  console.debug("#### START assignUsersToGroups : search Users");
+  console.debug("##### assignUsersToGroups : search Users");
   for (array of arrayOfArrays) {
 
     let userIdsInGroup = [];
     
 
-    console.debug("#### START assignUsersToGroups : search Users : array length => " + array.length);
+    console.debug("##### assignUsersToGroups : search Users : array length => " + array.length);
     for (userItem of array) {      
-      console.debug("#### assignUsersToGroups : searchUser => [" + (array.indexOf(userItem) + 2 + (arrayOfArrays.indexOf(array) * 50)) + "] - " + userItem);
+      console.debug("##### assignUsersToGroups : searchUser => [" + (array.indexOf(userItem) + 2 + (arrayOfArrays.indexOf(array) * 50)) + "] - " + userItem);
       const userSearch = await usersApiProxy.searchUser(userItem);
       wait(500);
       //console.debug("#### assignUsersToGroups : userFound => "+JSON.stringify(userSearch.results));
@@ -69,23 +73,20 @@ async function assignUsersToGroups(users, groupName) {
     }
 
 
-    //console.debug("#### assignUsersToGroups : usersIdsInGroup "+JSON.stringify(userIdsInGroup));
+    //console.debug("##### assignUsersToGroups : usersIdsInGroup "+JSON.stringify(userIdsInGroup));
 
     if (userIdsInGroup.length > 0) {
       try {
-        console.debug("#### START assignUsersToGroups : addUsersToAGroup : userIdsInGroup length => " + userIdsInGroup.length);
+        console.debug("##### assignUsersToGroups : addUsersToAGroup : userIdsInGroup length => " + userIdsInGroup.length);
         await groupsApiProxy.addUsersToAGroup(group.id, userIdsInGroup);
       } catch (e) {
-        console.error(`Error in assignUsersToGroup`, userItem, e);
+        console.error("##### ERROR assignUsersToGroup", userItem, e);
       }
     }
 
   }
 
-  console.debug("#### END assignUsersToGroups : groupName => " + groupName);
-
-  console.debug("#### END assignUsersToGroups : userInError => " + JSON.stringify(userInError));
-
+  console.debug("#### Leaving assignUsersToGroups : userInError => " + JSON.stringify(userInError));
 }
 
 
@@ -103,18 +104,21 @@ async function bulkGroupMembers(filename, groupName) {
   let resultPromises = [];
   let users = [];
 
-  console.log('##### Entering bulkGroupMembers')
+  console.log('#### Entering bulkGroupMembers')
 
   fs.createReadStream(filename)
     .pipe(csv())
     .on('data', async (user) => {
       resultPromises.push(groupsApiProxy.getGroups);
       users.push(user.email);
-      //console.debug("##### bulkGroupMembers : on Data : users => "+JSON.stringify(users));
     })
     .on('end', async () => {
+      //console.debug("##### bulkGroupMembers : on Data : users => "+JSON.stringify(users));
       await assignUsersToGroups(users, groupName);
+      console.log('#### Leaving bulkGroupMembers')
     });
+   
+  
 }
 
 
